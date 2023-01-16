@@ -19,7 +19,65 @@
  *
  * @format
  */
+export {
+  default as AuthenticationToken,
+  AuthenticationTokenMap,
+} from './FBAuthenticationToken';
+export {
+  default as AppEventsLogger,
+  AppEventsFlushBehavior,
+  ProductAvailability,
+  ProductCondition,
+  Params,
+  UserData,
+  AppEvent,
+  AppEventParam,
+} from './FBAppEventsLogger';
+export {default as AppLink} from './FBAppLink';
+export {
+  default as GameRequestDialog,
+  GameRequestDialogResult,
+} from './FBGameRequestDialog';
+export {
+  default as GraphRequest,
+  GraphRequestCallback,
+  GraphRequestConfig,
+  GraphRequestParameters,
+} from './FBGraphRequest';
+export {default as GraphRequestManager} from './FBGraphRequestManager';
+export {
+  default as LoginManager,
+  DefaultAudience,
+  LoginBehavior,
+  LoginBehaviorAndroid,
+  LoginBehaviorIOS,
+  LoginResult,
+  LoginTracking,
+} from './FBLoginManager';
+export {default as MessageDialog, MessageDialogResult} from './FBMessageDialog';
+export {default as Profile, ProfileMap} from './FBProfile';
+export {default as Settings} from './FBSettings';
+export {
+  default as ShareDialog,
+  ShareDialogMode,
+  ShareDialogModeAndroid,
+  ShareDialogModeIOS,
+  ShareDialogResult,
+} from './FBShareDialog';
+export {
+  default as LoginButton,
+  Event,
+  TooltipBehaviorIOS,
+} from './FBLoginButton';
+export {default as SendButton} from './FBSendButton';
+export {default as ShareButton} from './FBShareButton';
+export {default as AEMReporterIOS} from './FBAEMReporter';
 
-
-export { default as Settings } from './FBSettings';
-export { default as ShareDialog } from './FBShareDialog';
+export {RNFBSDKCallback} from './models/FBSDKCallback';
+export {
+  ShareContent,
+  ShareContentCommonParameters,
+} from './models/FBShareContent';
+export {ShareLinkContent} from './models/FBShareLinkContent';
+export {SharePhotoContent} from './models/FBSharePhotoContent';
+export {ShareVideoContent} from './models/FBShareVideoContent';
