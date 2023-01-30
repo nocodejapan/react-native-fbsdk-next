@@ -117,7 +117,7 @@ protected List<ReactPackage> getPackages() {
 
 #### 3.1 Android
 
-Before you can run the project, follow the [Getting Started Guide](https://developers.facebook.com/docs/android/getting-started/) for Facebook Android SDK to set up a Facebook app. You can skip the build.gradle changes since that's taken care of by the rnpm link step above, but **make sure** you follow the rest of the steps such as updating `strings.xml` and `AndroidManifest.xml`.
+Before you can run the project, follow the [Getting Started Guide](https://developers.facebook.com/docs/android/getting-started/) for Facebook Android SDK to set up a Facebook app. You can skip the build.gradle changes since that's taken care of by the rnpm link step above, but **make sure** you follow the rest of the steps such as updating `strings.xml` and `AndroidManifest.xml`. In addition, keep in mind that you have to point the Key Hash generation command at your app's `debug.keystore` file. You can find its location by checking [`storeFile`](https://developer.android.com/studio/build/gradle-tips#sign-your-app) in one of the `build.gradle` files (its default path is `android/app/build.gradle` however this can vary from project to project).
 
 #### 3.2 iOS
 
@@ -125,7 +125,7 @@ Follow ***steps 2, 3 and 4*** in the [Getting Started Guide](https://developers.
 
 **NOTE:** The above link (Step 3 and 4) contains Swift code instead of Objective-C which is inconvenient since `react-native` ecosystem still relies
    on Objective-C. To make it work in Objective-C you need to do the following in `/ios/PROJECT/AppDelegate.m`:
-   1. Add `#import <FBSDKCoreKit/FBSDKCoreKit.h>`
+   1. Add `#import <FBSDKCoreKit/FBSDKCoreKit-swift.h>`
    2. Inside `didFinishLaunchingWithOptions`, add the following:
       ```objc
          [[FBSDKApplicationDelegate sharedInstance] application:application
@@ -133,6 +133,18 @@ Follow ***steps 2, 3 and 4*** in the [Getting Started Guide](https://developers.
       ```
    3. After this step, if you run into this `build` issue: `Undefined symbols for architecture x86_64:`, 
    then you need to create a new file `File.swift` on your project folder. After doing this, you will get a prompt from `Xcode` asking if you would like to create a `Bridging Header`. Click accept.
+   4. From the facebook-ios-sdk docs steps 1-3, but in Objective-C since they have moved to Swift for their examples - make something like the following code is in AppDelegate.m:
+      ```objc
+      - (BOOL)application:(UIApplication *)app
+                  openURL:(NSURL *)url
+                  options:(NSDictionary<UIApplicationOpenURLOptionsKey,id> *)options
+      {
+        return [[FBSDKApplicationDelegate sharedInstance]application:app
+                                                            openURL:url
+                                                            options:options];
+      }
+      ```
+      Without this code login might not work if Facebook app is installed, see https://github.com/thebergamo/react-native-fbsdk-next/issues/59#issuecomment-1038149447 - if you are also using react-native deep-linking you may need have multiple entries in this openURL method, as detailed in the next section
 
 **If you're not using cocoapods already** you can also follow step 1.1 to set it up.
 
@@ -141,7 +153,7 @@ Follow ***steps 2, 3 and 4*** in the [Getting Started Guide](https://developers.
 The `AppDelegate.m` file can only have one method for `openUrl`. If you're also using `RCTLinkingManager` to handle deep links, you should handle both results in your `openUrl` method.
 
 ```objc
-#import <FBSDKCoreKit/FBSDKCoreKit.h> // <- Add This Import
+#import <FBSDKCoreKit/FBSDKCoreKit-swift.h> // <- Add This Import
 #import <React/RCTLinkingManager.h> // <- Add This Import
 
 - (BOOL)application:(UIApplication *)app
@@ -283,7 +295,7 @@ Settings.initializeSDK();
 If you would like to initialize the Facebook SDK even earlier in startup for iOS, you need to include this code in your AppDelegate.m file now that auto-initialization is removed.
 
 ```objective-c
-#import <FBSDKCoreKit/FBSDKCoreKit.h> // <- Add This Import
+#import <FBSDKCoreKit/FBSDKCoreKit-swift.h> // <- Add This Import
 
 - (BOOL)application:(UIApplication *)application didFinishLaunchingWithOptions:(NSDictionary *)launchOptions
 {
@@ -635,7 +647,7 @@ The DeepLink URL from the re-engagement ads should be passed to the AEM Kit even
 
 // apply codes below to `application:openURL:options:` 
 // in `AppDelegate.m` or `SceneDelegate.m`
-[FBAEMReporter configureWithNetworker:nil appID:{app-id}];
+[FBAEMReporter configureWithNetworker:nil appID:@"{app-id}" reporter:nil]; // Replace {app-id} with your Facebook App id
 [FBAEMReporter enable];
 [FBAEMReporter handleURL:url];
 ```
@@ -712,19 +724,29 @@ After installing this npm package, add the [config plugin](https://docs.expo.io/
 }
 ```
 
+Unless you are managing your own native code, the config plugin must be configured per the following "API" section.
+         
 Next, rebuild your app as described in the ["Adding custom native code"](https://docs.expo.io/workflow/customizing/) guide.
 
 ### API
 
 The plugin provides props for extra customization. Every time you change the props or plugins, you'll need to rebuild (and `prebuild`) the native app. If no extra properties are added, defaults will be used.
 
+Required configuration:
+         
 - `appID` (_string_): Facebook Application ID.
 - `displayName` (_string_): Application Name.
 - `clientToken` (_string_): Client Token.
-- `iosUserTrackingPermission` (_string_): iOS User Tracking Permission. Defaults `This identifier will be used to deliver personalized ads to you.`.
+- `scheme` (_string_): The scheme to use for returning to the app from Facebook. Of the form `fb[app-id]`.
+
+Optional configuration:
+
+- `iosUserTrackingPermission` (_string_): iOS User Tracking Permission.
 - `advertiserIDCollectionEnabled` (_boolean_): Enable advertiser ID collection. Default `false`.
 - `autoLogAppEventsEnabled` (_boolean_): Default `false`.
 - `isAutoInitEnabled` (_boolean_): Default `false`.
+         
+> If you are migrating from `expo-facebook` to this library, it is important to consider that `clientToken` was not required in `expo-facebook`, but it is required here. You can get that value from "Facebook Developers > Your App > Configurations > Advanced".
 
 #### Example
 
@@ -738,13 +760,32 @@ The plugin provides props for extra customization. Every time you change the pro
           "appID": "48127127xxxxxxxx",
           "clientToken": "c5078631e4065b60d7544a95xxxxxxxx",
           "displayName": "RN SDK Demo",
+          "scheme": "fb48127127xxxxxxxx",
           "advertiserIDCollectionEnabled": false,
           "autoLogAppEventsEnabled": false,
-          "isAutoInitEnabled": true
+          "isAutoInitEnabled": true,
+          "iosUserTrackingPermission": "This identifier will be used to deliver personalized ads to you."
         }
       ]
     ]
   }
+}
+```
+
+## Enabling Auto App Installs in Expo
+To enable auto app installs in Expo, you need to set autoLogAppEventsEnabled and advertiserIDCollectionEnabled flags to **true** in your `app.json` or `app.config.js`.
+
+Moreover, on iOS you need user consent to collect user data. You can do this by adding the following code somewhere to your `App.tsx`:
+
+```js
+import { requestTrackingPermissionsAsync } from 'expo-tracking-transparency';
+
+const { status } = await requestTrackingPermissionsAsync(); 
+
+Settings.initializeSDK();
+
+if (status === 'granted') {
+    await Settings.setAdvertiserTrackingEnabled(true);
 }
 ```
 
